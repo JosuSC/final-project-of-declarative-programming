@@ -1,0 +1,27 @@
+# Haskell build artifacts
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+*.prof
+*.hp
+*.eventlog
+
+# GHCi / stack / cabal
+.ghci
+.stack-work/
+dist/
+dist-newstyle/
+.cabal-sandbox/
+cabal.sandbox.config
+
+# VS Code / OS
+.vscode/*.log
+.DS_Store
+Thumbs.db
+
+# Executables (build locally)
+*.exe
+
+# Bundles
+*.zip

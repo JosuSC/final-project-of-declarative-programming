@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build (GHC)",
+      "type": "shell",
+      "command": "ghc",
+      "args": [
+        "-O2",
+        "main.hs",
+        "-o",
+        "main.exe"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run (Game)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Set-Location \"${workspaceFolder}\"; if (!(Test-Path .\\main.exe)) { ghc -O2 main.hs -o main.exe }; Start-Process -FilePath .\\main.exe"
+      ],
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}
