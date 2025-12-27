@@ -1,0 +1,75 @@
+cabal-version:      2.4
+name:               matcominesweeper
+version:            1.0.0
+synopsis:           Juego Buscaminas - Proyecto Final de Programación Declarativa
+description:        
+    MATCOMINESWEEPER es una implementación del clásico juego Buscaminas
+    desarrollada en Haskell como proyecto final de la asignatura
+    Programación Declarativa de la carrera Ciencia de la Computación
+    en la Facultad de Matemática y Computación (MATCOM) de la
+    Universidad de La Habana.
+    .
+    El juego implementa todas las características clásicas del Buscaminas:
+    .
+    * Tres niveles de dificultad (Fácil, Medio, Difícil)
+    * Revelado en cascada de celdas vacías
+    * Sistema de banderas para marcar minas
+    * Primer clic siempre seguro
+    * Cronómetro de partida
+    .
+    Desarrollado siguiendo los principios de la programación funcional:
+    inmutabilidad, funciones puras y separación de responsabilidades.
+
+license:            MIT
+license-file:       LICENSE
+author:             Josué Javier Senarega Claro, Ronald Cabrera Martínez
+maintainer:         Estudiantes C-311, MATCOM, Universidad de La Habana
+copyright:          (c) 2025 Josué Senarega, Ronald Cabrera
+category:           Game
+build-type:         Simple
+extra-doc-files:    README.md
+
+-- Archivos adicionales incluidos en la distribución
+extra-source-files:
+    docs/*.md
+
+-- ============================================================================
+-- Ejecutable principal
+-- ============================================================================
+
+executable matcominesweeper
+    -- Punto de entrada
+    main-is:          Main.hs
+    
+    -- Módulos del proyecto
+    other-modules:
+        Types
+        Config
+        Board
+        Render
+        Events
+    
+    -- Directorio de código fuente
+    hs-source-dirs:   src
+    
+    -- Extensiones de lenguaje utilizadas
+    default-extensions:
+        RecordWildCards
+    
+    -- Dependencias del proyecto
+    build-depends:
+        base          >= 4.14 && < 5,
+        gloss         >= 1.13 && < 2,
+        random        >= 1.2  && < 2,
+        containers    >= 0.6  && < 1
+    
+    -- Opciones de compilación
+    ghc-options:
+        -Wall
+        -O2
+        -threaded
+        -rtsopts
+        -with-rtsopts=-N
+    
+    -- Versión de Haskell
+    default-language: Haskell2010
