@@ -82,22 +82,24 @@ data Cell = Cell
 type Board = M.Map Pos Cell
 
 data Phase
-  = Menu
+  = Loading
+  | Menu
   | Playing
   | Won
   | Lost
   deriving (Eq, Show)
 
 data World = World
-  { phase      :: Phase
-  , difficulty :: Difficulty
-  , rows       :: Int
-  , cols       :: Int
-  , minesN     :: Int
-  , board      :: Board
-  , firstClick :: Bool
-  , rng        :: StdGen
-  , elapsed    :: Float
+  { phase       :: Phase
+  , difficulty  :: Difficulty
+  , rows        :: Int
+  , cols        :: Int
+  , minesN      :: Int
+  , board       :: Board
+  , firstClick  :: Bool
+  , rng         :: StdGen
+  , elapsed     :: Float
+  , loadingTime :: Float
   }
 
 -- ==========================
@@ -225,15 +227,16 @@ initialWorld gen =
   let d = Easy
       (r,c,m) = difficultyParams d
   in World
-      { phase = Menu
+      { phase = Loading
       , difficulty = d
       , rows = r
       , cols = c
       , minesN = m
-      , board = emptyBoard (World Menu d r c m M.empty True gen 0)
+      , board = emptyBoard (World Loading d r c m M.empty True gen 0 0)
       , firstClick = True
       , rng = gen
       , elapsed = 0
+      , loadingTime = 0
       }
 
 renderWorld :: World -> Picture
@@ -241,13 +244,13 @@ renderWorld w@World{..} =
   Pictures
     [ uncurry backgroundPanel (idealWindowSize w)
     , translate (-fromIntegral screenW/2 + padding) (fromIntegral screenH/2 - padding) $
-        scale 0.12 0.12 $ color textColor $ Text titleText
-    , hudBar w
+        scale 0.15 0.15 $ color textColor $ Text titleText
     , case phase of
-        Menu    -> renderMenu w
-        Playing -> renderBoard w
-        Won     -> Pictures [renderBoard w, overlayMessage "¡Has ganado! Pulsa R para reiniciar o M para menú"]
-        Lost    -> Pictures [renderBoard w, overlayMessage "Has perdido... Pulsa R para reiniciar o M para menú"]
+        Loading -> renderLoading w
+        Menu    -> Pictures [hudBar w, renderMenu w]
+        Playing -> Pictures [hudBar w, renderBoard w]
+        Won     -> Pictures [hudBar w, renderBoard w, overlayMessage "Has ganado! | R: reiniciar | M: menu"]
+        Lost    -> Pictures [hudBar w, renderBoard w, overlayMessage "Has perdido... | R: reiniciar | M: menu"]
     ]
   where
     titleText = "BUSCAMINAS"
@@ -257,6 +260,27 @@ backgroundPanel :: Int -> Int -> Picture
 backgroundPanel w h =
   color panelColor $ rectangleSolid (fromIntegral w) (fromIntegral h)
 
+renderLoading :: World -> Picture
+renderLoading w@World{..} =
+  let progress = min 1.0 (loadingTime / 3.0)
+      barWidth = 500
+      barHeight = 30
+      filledWidth = barWidth * progress
+      barY = -60
+      loadingText = "CARGANDO RECURSOS..."
+      percentText = show (floor (progress * 100) :: Int) ++ "%"
+  in Pictures
+    [ translate 0 0 $ scale 0.22 0.22 $ color (makeColorI 220 220 220 255) $ Text loadingText
+    , translate 0 barY $ Pictures
+        [ translate 2 (-2) $ color (makeColorI 15 15 15 150) $ roundedRect barWidth barHeight 8
+        , color (makeColorI 45 50 60 255) $ roundedRect barWidth barHeight 8
+        , translate (-barWidth/2 + filledWidth/2) 0 $
+            color (makeColorI 80 180 230 255) $ roundedRect filledWidth barHeight 8
+        , translate 0 0 $ color (makeColorI 120 220 255 255) $ rectangleWire barWidth barHeight
+        ]
+    , translate 0 (barY - 50) $ scale 0.18 0.18 $ color (makeColorI 200 200 200 255) $ Text percentText
+    ]
+
 hudBar :: World -> Picture
 hudBar w@World{..} =
   let (screenW, screenH) = idealWindowSize w
@@ -265,25 +289,26 @@ hudBar w@World{..} =
       timeS :: Int
       timeS = floor elapsed
       diffLabel = case difficulty of
-        Easy -> "Fácil"
+        Easy -> "Facil"
         Medium -> "Medio"
-        Hard -> "Difícil"
+        Hard -> "Dificil"
       phaseLabel = case phase of
-        Menu -> "MENÚ"
+        Loading -> "CARGANDO"
+        Menu -> "MENU"
         Playing -> "JUGANDO"
         Won -> "VICTORIA"
         Lost -> "DERROTA"
       barY = fromIntegral screenH/2 - 80
       barW = fromIntegral screenW - 2*padding
-      barH = 56
+      barH = 60
       bar = translate 0 barY $ Pictures
-        [ translate 2 (-2) $ color (makeColorI 12 12 12 120) $ roundedRect barW barH 12
-        , color (makeColorI 28 32 42 255) $ roundedRect barW barH 12
-        , translate (-barW/2 + 18) (-10) $ scale 0.14 0.14 $ color (makeColorI 220 220 220 255) $
+        [ translate 3 (-3) $ color (makeColorI 12 12 12 150) $ roundedRect barW barH 14
+        , color (makeColorI 28 32 42 255) $ roundedRect barW barH 14
+        , translate (-barW/2 + 24) (-12) $ scale 0.16 0.16 $ color (makeColorI 230 230 230 255) $
             Text (phaseLabel ++ "  |  " ++ diffLabel)
-        , translate (-28) (-10) $ scale 0.14 0.14 $ color (makeColorI 220 220 220 255) $
+        , translate (-24) (-12) $ scale 0.16 0.16 $ color (makeColorI 230 230 230 255) $
             Text ("Minas: " ++ show minesLeft ++ "  |  Banderas: " ++ show flagsPlaced)
-        , translate (barW/2 - 160) (-10) $ scale 0.14 0.14 $ color (makeColorI 220 220 220 255) $
+        , translate (barW/2 - 180) (-12) $ scale 0.16 0.16 $ color (makeColorI 230 230 230 255) $
             Text ("Tiempo: " ++ show timeS ++ "s")
         ]
   in bar
@@ -291,32 +316,34 @@ hudBar w@World{..} =
 statusBar :: World -> Picture
 statusBar World{..} =
   let msg = case phase of
-        Menu    -> "Elige dificultad: 1=Fácil, 2=Medio, 3=Difícil"
-        Playing -> "Clic izq: revelar | Clic der: bandera | R: reiniciar | M: menú"
-        Won     -> "¡Victoria! R: reiniciar | M: menú"
-        Lost    -> "Derrota. R: reiniciar | M: menú"
+        Loading -> "Cargando recursos..."
+        Menu    -> "Elige dificultad: 1=Facil, 2=Medio, 3=Dificil"
+        Playing -> "Clic izq: revelar | Clic der: bandera | R: reiniciar | M: menu"
+        Won     -> "Victoria! R: reiniciar | M: menu"
+        Lost    -> "Derrota. R: reiniciar | M: menu"
   in scale 0.12 0.12 $ color (makeColorI 220 220 220 255) $ Text msg
 
 renderMenu :: World -> Picture
 renderMenu World{..} =
   let items =
-        [ ("Fácil (9x9, 10 minas)", Easy)
+        [ ("Facil (9x9, 10 minas)", Easy)
         , ("Medio (16x16, 40 minas)", Medium)
-        , ("Difícil (16x30, 99 minas)", Hard)
+        , ("Dificil (16x30, 99 minas)", Hard)
         ]
       pics = zipWith (\i (label,_) ->
-                        translate 0 (120 - fromIntegral i * 80) $
+                        translate 0 (120 - fromIntegral i * 90) $
                           menuButton label) [0..] items
-      hint = translate 0 (-160) $ scale 0.14 0.14 $
-               color (makeColorI 210 210 210 255) $
+      hint = translate 0 (-180) $ scale 0.16 0.16 $
+               color (makeColorI 220 220 220 255) $
                  Text "Pulsa 1, 2 o 3 para empezar"
   in Pictures (pics ++ [hint])
 
 menuButton :: String -> Picture
 menuButton label =
   Pictures
-    [ color gridColor $ roundedRect 480 60 14
-    , translate 0 0 $ scale 0.16 0.16 $ color textColor $ Text label
+    [ translate 2 (-2) $ color (makeColorI 15 15 15 120) $ roundedRect 520 68 16
+    , color gridColor $ roundedRect 520 68 16
+    , translate 0 (-2) $ scale 0.18 0.18 $ color textColor $ Text label
     ]
 
 roundedRect :: Float -> Float -> Float -> Picture
@@ -379,14 +406,15 @@ flagIcon =
 overlayMessage :: String -> Picture
 overlayMessage msg =
   translate 0 0 $ Pictures
-    [ color (makeColorI 0 0 0 100) $ rectangleSolid 1000 600
-    , translate 0 0 $ scale 0.2 0.2 $ color white $ Text msg
+    [ color (makeColorI 0 0 0 140) $ rectangleSolid 2000 1200
+    , translate 4 (-4) $ scale 0.24 0.24 $ color (makeColorI 30 30 30 200) $ Text msg
+    , translate 0 0 $ scale 0.24 0.24 $ color white $ Text msg
     ]
 
 idealWindowSize :: World -> (Int, Int)
 idealWindowSize World{..} =
-  let w = max 1024 (round (fromIntegral cols * cellSize + 2*padding + 200))
-      h = max 768  (round (fromIntegral rows * cellSize + 2*padding + 160))
+  let w = max 1120 (round (fromIntegral cols * cellSize + 2*padding + 220))
+      h = max 840  (round (fromIntegral rows * cellSize + 2*padding + 180))
   in (w, h)
 
 -- ==========================
@@ -418,7 +446,7 @@ handleEvent _ w = w
 startGame :: Difficulty -> World -> World
 startGame d w@World{..} =
   let (r,c,m) = difficultyParams d
-      b = emptyBoard (World Playing d r c m M.empty True rng 0)
+      b = emptyBoard (World Playing d r c m M.empty True rng 0 0)
   in w { phase = Playing
        , difficulty = d
        , rows = r
@@ -482,5 +510,12 @@ rightClick pos w =
 -- ==========================
 
 stepWorld :: Float -> World -> World
-stepWorld dt w@World{..} = w { elapsed = elapsed + dt }
+stepWorld dt w@World{..}
+  | phase == Loading =
+      let newLoadingTime = loadingTime + dt
+      in if newLoadingTime >= 3.0
+           then w { phase = Menu, loadingTime = newLoadingTime, elapsed = 0 }
+           else w { loadingTime = newLoadingTime }
+  | phase == Playing = w { elapsed = elapsed + dt }
+  | otherwise = w
 
