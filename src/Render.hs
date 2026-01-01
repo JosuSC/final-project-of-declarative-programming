@@ -50,8 +50,8 @@ renderWorld w@World{..} =
         Splash  -> renderSplash w
         Menu    -> renderMenuScreen w
         Playing -> renderPlayingScreen w
-        Won     -> renderEndScreen w "¡VICTORIA!" "Has descubierto todas las celdas seguras"
-        Lost    -> renderEndScreen w "DERROTA" "¡Has pisado una mina!"
+        Won     -> renderEndScreen w "VICTORIA!" "Has descubierto todas las celdas seguras"
+        Lost    -> renderEndScreen w "DERROTA" "Has pisado una mina"
 
 -- ============================================================================
 -- PANTALLA DE SPLASH (PRESENTACIÓN)
@@ -154,11 +154,11 @@ renderMenuScreen w@World{..} =
         
         -- Botones de dificultad
         easyBtn = translate 0 100 $ 
-            renderMenuButton "FÁCIL" "9 × 9  •  10 minas" (difficulty == Easy)
+            renderMenuButton "FACIL" "9 x 9 con 10 minas" (difficulty == Easy)
         mediumBtn = translate 0 0 $ 
-            renderMenuButton "MEDIO" "16 × 16  •  40 minas" (difficulty == Medium)
+            renderMenuButton "MEDIO" "16 x 16 con 40 minas" (difficulty == Medium)
         hardBtn = translate 0 (-100) $ 
-            renderMenuButton "DIFÍCIL" "16 × 30  •  99 minas" (difficulty == Hard)
+            renderMenuButton "DIFICIL" "16 x 30 con 99 minas" (difficulty == Hard)
         
         -- Instrucciones
         instructions = translate (-140) (-200) $ scale 0.1 0.1 $ 
@@ -172,7 +172,7 @@ renderMenuScreen w@World{..} =
                 Text "Controles: Clic izq = revelar | Clic der = bandera"
             , translate (-130) (-290) $ scale 0.08 0.08 $ 
                 color (makeColorI 120 120 130 255) $ 
-                Text "R = reiniciar | M = menú"
+                Text "R = reiniciar | M = menu"
             ]
         
     in Pictures [background, title, subtitle, easyBtn, mediumBtn, hardBtn, instructions, controls]
@@ -476,7 +476,7 @@ renderEndScreen w title subtitle =
             ]
         
         -- Título
-        titleColor = if title == "¡VICTORIA!" 
+        titleColor = if title == "VICTORIA!" 
                      then makeColorI 100 220 120 255 
                      else makeColorI 255 100 100 255
         titlePic = translate (-fromIntegral (length title) * 12) 35 $ 
@@ -489,7 +489,7 @@ renderEndScreen w title subtitle =
         -- Instrucciones
         instructions = translate (-120) (-55) $ scale 0.1 0.1 $ 
             color (makeColorI 180 180 190 255) $ 
-            Text "R = Reiniciar  |  M = Menú"
+            Text "R = Reiniciar  |  M = Menu"
         
     in Pictures [gameScreen, overlay, panel, titlePic, subtitlePic, instructions]
 

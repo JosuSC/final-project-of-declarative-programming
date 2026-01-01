@@ -125,11 +125,12 @@ difficultyParams Hard   = (16, 30, 99)   -- Tablero grande, muchas minas
 {-|
   Devuelve el nombre en español de cada dificultad.
   Útil para mostrar en la interfaz gráfica.
+  Nota: Sin tildes para compatibilidad con fuentes bitmap de Gloss.
 -}
 difficultyName :: Difficulty -> String
-difficultyName Easy   = "Fácil"
-difficultyName Medium = "Medio"
-difficultyName Hard   = "Difícil"
+difficultyName Easy   = "FACIL"
+difficultyName Medium = "MEDIO"
+difficultyName Hard   = "DIFICIL"
 
 -- ============================================================================
 -- ESTADO DEL MUNDO
