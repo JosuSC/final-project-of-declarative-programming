@@ -212,4 +212,4 @@ fps = 60
   3 segundos es suficiente para leer sin ser tedioso.
 -}
 splashDuration :: Float
-splashDuration = 3.0
+splashDuration = 5.0

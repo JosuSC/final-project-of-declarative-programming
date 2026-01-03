@@ -111,9 +111,9 @@ renderSplash World{..} =
             [ translate (-150) (-280) $ scale 0.1 0.1 $ 
                 color (fadeColor 0.5) $ Text "Creado por:"
             , translate (-200) (-310) $ scale 0.1 0.1 $ 
-                color (fadeColor 0.5) $ Text "Josué Javier Senarega Claro — C-311"
+                color (fadeColor 0.5) $ Text "Josue Javier Senarega Claro — C-311"
             , translate (-185) (-335) $ scale 0.1 0.1 $ 
-                color (fadeColor 0.5) $ Text "Ronald Cabrera Martínez — C-311"
+                color (fadeColor 0.5) $ Text "Ronald Cabrera Martinez — C-311"
             ]
         
         -- Decoración: pequeñas minas
